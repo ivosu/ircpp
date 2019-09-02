@@ -1,5 +1,5 @@
-# libircpp
-libircpp is a simple C++17 open-source library for basic IRCv3 message parsing and client.
+# ircpp
+ircpp is a simple C++17 open-source library for basic IRCv3 message parsing and client.
 
 ## Requirements
 Client uses [Microsoft's CPP REST SDK](https://github.com/microsoft/cpprestsdk) because of it's tasks and websocket. I plan on either replacing them completely or find another libraries with similar functionality.
