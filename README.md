@@ -14,4 +14,5 @@ Coming soon
 Main TODO's are:
   * Replacing mentioned CPP REST SDK
   * Adding examples
+  * Better commented/documented code
   * Fully comply to all specifications (namely tags key parsing and rfc952 for hostnames)

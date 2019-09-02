@@ -6,12 +6,11 @@
 #include <cpprest/ws_client.h>
 #include <thread>
 #include "message.h"
-#include "../../src/ts_queue.hpp"
+#include "util/ts_queue.hpp"
 
 namespace irc {
 	class irc_client {
 	  public:
-
 		irc_client(const std::string& host, bool handle_ping);
 
 		~irc_client();
@@ -23,7 +22,6 @@ namespace irc {
 		message read_message();
 
 	  private:
-
 		pplx::task<void> create_infinite_receive_task(const pplx::cancellation_token& cancellation_token);
 
 		const bool m_handle_ping;
