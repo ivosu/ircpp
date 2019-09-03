@@ -8,3 +8,6 @@ add_library(ircpp SHARED src/message.cpp src/client.cpp)
 
 target_include_directories(ircpp PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(ircpp ${CPPREST})
+
+add_executable(example_twitch example/twitch.cpp)
+target_link_libraries(example_twitch ircpp)
