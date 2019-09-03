@@ -9,11 +9,11 @@
 #include "util/ts_queue.hpp"
 
 namespace irc {
-	class irc_client {
+	class client {
 	  public:
-		irc_client(const std::string& host, bool handle_ping);
+		client(const std::string& host, bool handle_ping);
 
-		~irc_client();
+		~client();
 
 		pplx::task<void> send_message(const message& message_to_send);
 
