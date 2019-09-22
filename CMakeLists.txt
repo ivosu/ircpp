@@ -4,10 +4,8 @@ project(ircpp CXX)
 find_package(cpprestsdk REQUIRED NAMES cpprestsdk)
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(ircpp STATIC src/message.cpp src/client.cpp)
+add_library(ircpp INTERFACE)
 
-target_include_directories(ircpp PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(ircpp PUBLIC cpprestsdk::cpprest)
-
-add_executable(example_twitch example/twitch.cpp)
-target_link_libraries(example_twitch ircpp)
+target_sources(ircpp INTERFACE ${PROJECT_SOURCE_DIR}/src/message.cpp ${PROJECT_SOURCE_DIR}/src/client.cpp)
+target_include_directories(ircpp INTERFACE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(ircpp INTERFACE cpprestsdk::cpprest)
