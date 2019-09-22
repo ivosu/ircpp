@@ -11,7 +11,7 @@
 namespace irc {
 	class client {
 	  public:
-		client(const std::string& host, bool handle_ping);
+		client(const utility::string_t& host, bool handle_ping);
 
 		~client();
 

@@ -9,8 +9,7 @@ using std::chrono::milliseconds;
 using irc::client;
 using irc::message;
 
-using pplx::task_status::completed;
-using pplx::task_status::canceled;
+using pplx::task_status;
 using pplx::task;
 using pplx::create_task;
 using pplx::cancellation_token;
@@ -54,7 +53,7 @@ task<void> client::create_infinite_receive_task(const cancellation_token& cancel
 									}
 								}
 							}
-						}, cancellation_token).wait() == canceled)
+						}, cancellation_token).wait() == task_status::canceled)
 							cancel_current_task();
 					} catch (const websocket_exception& e) {
 						cancel_current_task();
@@ -64,8 +63,8 @@ task<void> client::create_infinite_receive_task(const cancellation_token& cancel
 	);
 }
 
-client::client(const string& host, bool handle_ping) : m_handle_ping(handle_ping) {
-	if (m_client.connect(host).wait() != completed) {
+client::client(const utility::string_t& host, bool handle_ping) : m_handle_ping(handle_ping) {
+    if (m_client.connect(host).wait() != task_status::completed) {
 		throw "Not connected";
 	}
 	m_receive_task = create_infinite_receive_task(m_cancellation_token_source.get_token());
@@ -91,5 +90,5 @@ message client::read_message() {
 irc::client::~client() {
 	m_client.close().wait();
 	m_cancellation_token_source.cancel();
-	assert(m_receive_task.wait() == canceled);
+	assert(m_receive_task.wait() == task_status::canceled);
 }
