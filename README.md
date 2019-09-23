@@ -15,3 +15,6 @@ Main TODO's are:
   * Replacing mentioned CPP REST SDK
   * Better commented/documented code
   * Fully comply to all specifications (namely tags key parsing and rfc952 for hostnames)
+
+Near future:
+  * C++20 modules!
