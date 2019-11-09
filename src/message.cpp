@@ -14,26 +14,30 @@ using std::shared_ptr;
 using std::make_shared;
 
 using irc::message;
+using params_t = irc::message::params_t;
 using irc::tags_t;
 using irc::prefix_t;
 
 #define SKIP_WHITESPACES(it, end) do {} while ((++it) != (end) && *(it) == ' ')
 
-#define SKIP_WHITESPACES_THROW_END(it, end, parsed_part) SKIP_WHITESPACES((it), (end));\
-    if ((it) == (end))\
-        throw message::parsing_error("Message ended while parsing " + string((parsed_part)));
+#define SKIP_WHITESPACES_THROW_END(it, end, parsed_part) SKIP_WHITESPACES((it), (end));       \
+    if ((it) == (end)) {                                                                      \
+        throw message::parsing_error("Message ended while parsing " + string((parsed_part))); \
+    }
 
 namespace irc_parsing {
 	static string parse_key(string::const_iterator& it, const string::const_iterator& end) {
 		string key;
 		while (isalnum(*it) || *it == '-' || *it == '/' || *it == '+') { // TODO make precisely as in rfc1459
 			key.push_back(*it++);
-			if (it == end)
+			if (it == end) {
 				throw message::parsing_error("Message ended while parsing tag key");
+			}
 		}
 
-		if (key.empty())
+		if (key.empty()) {
 			throw message::parsing_error("Empty key in tags parsing");
+		}
 		return key;
 	}
 
@@ -41,8 +45,9 @@ namespace irc_parsing {
 		string tag_value;
 		while (*it != ';' && *it != ' ' && *it != '\r' && *it != '\n' && *it != '\0') {
 			if (*it == '\\') {
-				if (++it == end)
+				if (++it == end) {
 					throw message::parsing_error("Message ended while parsing tag value");
+				}
 				switch (*it++) {
 					case ':':
 						tag_value.push_back(';');
@@ -62,9 +67,12 @@ namespace irc_parsing {
 					default:
 						throw message::parsing_error("Unknown escape sequence");
 				}
-			} else tag_value.push_back(*it++);
-			if (it == end)
+			} else {
+				tag_value.push_back(*it++);
+			}
+			if (it == end) {
 				throw message::parsing_error("Message ended while parsing tag value");
+			}
 		}
 		return tag_value;
 	}
@@ -72,11 +80,13 @@ namespace irc_parsing {
 	static pair<string, optional<string>> parse_tag(string::const_iterator& it, const string::const_iterator& end) {
 		string key = parse_key(it, end);
 		if (*it == '=') {
-			if (++it == end)
+			if (++it == end) {
 				throw message::parsing_error("Message ended while parsing tag");
+			}
 			return make_pair(key, parse_tag_value(it, end));
-		} else
+		} else {
 			return make_pair(key, nullopt);
+		}
 	}
 
 	static tags_t parse_tags(string::const_iterator& it, const string::const_iterator& end) {
@@ -85,12 +95,14 @@ namespace irc_parsing {
 			return parsed_tags;
 		}
 		do {
-			if (++it == end)
+			if (++it == end) {
 				throw message::parsing_error("Message ended while parsing tags");
+			}
 			parsed_tags.insert(parse_tag(it, end));
 		} while (*it == ';');
-		if (*it != ' ')
+		if (*it != ' ') {
 			throw message::parsing_error("Tags do not terminate with space as they should");
+		}
 		SKIP_WHITESPACES_THROW_END(it, end, "tags")
 		return parsed_tags;
 	}
@@ -101,30 +113,33 @@ namespace irc_parsing {
 			do {
 				command.push_back(*it++);
 				if (it == end) {
-					if (crlf_included)
+					if (crlf_included) {
 						throw message::parsing_error("Message ended while parsing command");
+					}
 					break;
 				}
 			} while (isalpha(*it));
 		} else {
-			if (!isdigit(*it))
+			if (!isdigit(*it)) {
 				throw message::parsing_error("Message command is in wrong format");
+			}
 			command.push_back(*it++);
 			if (it == end) {
 				throw message::parsing_error("Message ended while parsing number command");
 			}
-			if (!isdigit(*it))
+			if (!isdigit(*it)) {
 				throw message::parsing_error("Message command is in wrong format");
+			}
 			command.push_back(*it++);
 			if (it == end) {
 				throw message::parsing_error("Message ended while parsing number command");
 			}
-			if (!isdigit(*it))
+			if (!isdigit(*it)) {
 				throw message::parsing_error("Message command is in wrong format");
+			}
 			command.push_back(*it++);
-			if (it == end) {
-				if (crlf_included)
-					throw message::parsing_error("Message ended while parsing number command");
+			if (it == end && crlf_included) {
+				throw message::parsing_error("Message ended while parsing number command");
 			}
 		}
 		return command;
@@ -136,13 +151,15 @@ namespace irc_parsing {
 		while (*it != ' ' && *it != '\r' && *it != '\n' && *it != '\0') {
 			param.push_back(*it++);
 			if (it == end) {
-				if (crlf_included)
+				if (crlf_included) {
 					throw message::parsing_error("Message ended while parsing middle param");
+				}
 				break;
 			}
 		}
-		if (param.empty())
+		if (param.empty()) {
 			throw message::parsing_error("Middle param is empty");
+		}
 		return param;
 	}
 
@@ -152,33 +169,34 @@ namespace irc_parsing {
 		while (*it != '\r' && *it != '\n' && *it != '\0') {
 			param.push_back(*it++);
 			if (it == end) {
-				if (crlf_included)
+				if (crlf_included) {
 					throw message::parsing_error("Message ended while parsing trailing param");
+				}
 				break;
 			}
 		}
 		return param;
 	}
 
-	static vector<string>
-	parse_params(string::const_iterator& it, const string::const_iterator& end, bool crlf_included) {
+	static params_t parse_params(string::const_iterator& it, const string::const_iterator& end, bool crlf_included) {
 		vector<string> parsed_params;
 		if (it == end) {
 			assert(!crlf_included);
 			return parsed_params;
 		}
 		while (*it == ' ') {
-			if (crlf_included) {
-				SKIP_WHITESPACES_THROW_END(it, end, "params")
-			} else {
-				SKIP_WHITESPACES(it, end);
-				if (it == end)
-					break;
+			SKIP_WHITESPACES(it, end);
+			if (it == end) {
+				if (crlf_included) {
+					throw message::parsing_error("Message ended while parsing params");
+				}
+				break;
 			}
 			if (*it == ':') {
 				if (++it == end) {
-					if (crlf_included)
+					if (crlf_included) {
 						throw message::parsing_error("Message ended while parsing params");
+					}
 					parsed_params.emplace_back("");
 					break;
 				}
@@ -195,10 +213,12 @@ namespace irc_parsing {
 	}
 
 	static optional<prefix_t> parse_prefix(string::const_iterator& it, const string::const_iterator& end) {
-		if (*it != ':')
+		if (*it != ':') {
 			return nullopt;
-		if (++it == end)
+		}
+		if (++it == end) {
 			throw message::parsing_error("Message ended while parsing prefix");
+		}
 		string main;
 		string user;
 		optional<string> res_user;
@@ -206,35 +226,43 @@ namespace irc_parsing {
 		optional<string> res_host;
 		while (*it != ' ' && *it != '!' && *it != '@') { // Parse main
 			main.push_back(*it++);
-			if (it == end)
+			if (it == end) {
 				throw message::parsing_error("Message ended while parsing prefix");
+			}
 		}
 		if (*it == '!') { // User part of prefix is present
-			if (++it == end)
+			if (++it == end) {
 				throw message::parsing_error("Message ended while parsing prefix");
+			}
 			while (*it != ' ' && *it != '@') { // Parse user part
 				user.push_back(*it++);
-				if (it == end)
+				if (it == end) {
 					throw message::parsing_error("Message ended while parsing prefix");
+				}
 			}
-			if (user.empty())
+			if (user.empty()) {
 				throw message::parsing_error("Empty user part in prefix");
+			}
 			res_user = make_optional(user);
 		}
 		if (*it == '@') { // Host part of prefix is present
-			if (++it == end)
+			if (++it == end) {
 				throw message::parsing_error("Message ended while parsing prefix");
+			}
 			while (*it != ' ') { // Parse host part
 				host.push_back(*it++); // TODO validate for valid host by rfc952
-				if (it == end)
+				if (it == end) {
 					throw message::parsing_error("Message ended while parsing prefix");
+				}
 			}
-			if (host.empty())
+			if (host.empty()) {
 				throw message::parsing_error("Empty host part in prefix");
+			}
 			res_host = make_optional(host);
 		}
-		if (*it != ' ')
+		if (*it != ' ') {
 			throw message::parsing_error("Prefix does not terminate with space as it should");
+		}
 		SKIP_WHITESPACES_THROW_END(it, end, "prefix");
 		return prefix_t(main, res_user, res_host);
 	}
@@ -269,36 +297,42 @@ static string escape_tag_value(const string& tag_value) {
 message::message(const string& raw_message, bool crlf_included) {
 	auto it = raw_message.cbegin();
 	auto end = raw_message.cend();
-	if (it == end)
+	if (it == end) {
 		throw message::parsing_error("Message is empty");
+	}
 	m_tags = irc_parsing::parse_tags(it, end);
 	m_prefix = irc_parsing::parse_prefix(it, end);
 	m_command = irc_parsing::parse_command(it, end, crlf_included);
 	m_params = irc_parsing::parse_params(it, end, crlf_included);
 	if (crlf_included) {
-		if (it == end)
+		if (it == end) {
 			throw message::parsing_error("Message ends before CRLF sequence");
-		if (*it++ != '\r')
+		}
+		if (*it++ != '\r') {
 			throw message::parsing_error("Expected CR character");
-		if (it == end)
+		}
+		if (it == end) {
 			throw message::parsing_error("Message ends before LF");
-		if (*it++ != '\n')
+		}
+		if (*it++ != '\n') {
 			throw message::parsing_error("Expected LF character");
+		}
 	}
-	if (it != end)
+	if (it != end) {
 		throw message::parsing_error("Message does not end properly");
+	}
 }
 
 message message::private_message(const string& message_text, const string& channel) {
-	return message({}, nullopt, "PRIVMSG", {"#" + channel, message_text});
+	return message("PRIVMSG", {"#" + channel, message_text});
 }
 
 message message::pass_message(const string& password) {
-	return message({}, nullopt, "PASS", {password});
+	return message("PASS", {password});
 }
 
 message message::nick_message(const string& nickname) {
-	return message({}, nullopt, "NICK", {nickname});
+	return message("NICK", {nickname});
 }
 
 message message::join_message(const vector<string>& channels, const vector<string>& keys) {
@@ -306,16 +340,18 @@ message message::join_message(const vector<string>& channels, const vector<strin
 	assert(!channels.empty());
 	auto c_it = channels.cbegin();
 	channels_param = "#" + *c_it;
-	for (++c_it; c_it != channels.cend(); ++c_it)
+	for (++c_it; c_it != channels.cend(); ++c_it) {
 		channels_param += ",#" + *c_it;
+	}
 	string keys_param;
 	if (!keys.empty()) {
 		auto k_it = keys.cbegin();
 		keys_param = *k_it;
-		for (++k_it; k_it != keys.cend(); ++k_it)
+		for (++k_it; k_it != keys.cend(); ++k_it) {
 			keys_param += "," + *k_it;
+		}
 	}
-	return message({}, nullopt, "JOIN", {channels_param, keys_param});
+	return message("JOIN", {channels_param, keys_param});
 }
 
 message message::part_message(const vector<string>& channels) {
@@ -323,17 +359,18 @@ message message::part_message(const vector<string>& channels) {
 	assert(!channels.empty());
 	auto c_it = channels.cbegin();
 	channels_param = "#" + *c_it;
-	for (++c_it; c_it != channels.cend(); ++c_it)
+	for (++c_it; c_it != channels.cend(); ++c_it) {
 		channels_param += ",#" + *c_it;
-	return message({}, nullopt, "PART", {channels_param});
+	}
+	return message("PART", {channels_param});
 }
 
-message message::pong_message(const string& daemon) {
-	return message({}, nullopt, "PONG", {daemon});
+message message::pong_message(const string& server) {
+	return message("PONG", {server});
 }
 
-message message::pong_message(const string& daemon1, const string& daemon2) {
-	return message({}, nullopt, "PONG", {daemon1, daemon2});
+message message::pong_message(const string& server1, const string& server2) {
+	return message("PONG", {server1, server2});
 }
 
 message message::capability_request_message(const vector<string>& capabilities) {
@@ -346,7 +383,7 @@ message message::capability_request_message(const vector<string>& capabilities) 
 		capabilities_str += ' ' + *c_it;
 	}
 	params.push_back(capabilities_str);
-	return message({}, nullopt, "CAP", params);
+	return message("CAP", params);
 }
 
 string message::to_irc_message() const {
@@ -358,8 +395,9 @@ string message::to_irc_message() const {
 			raw_message += '=' + escape_tag_value(it->second.value());
 		for (++it; it != m_tags.end(); ++it) {
 			raw_message += ';' + it->first;
-			if (it->second.has_value())
+			if (it->second.has_value()) {
 				raw_message += '=' + escape_tag_value(it->second.value());
+			}
 		}
 		raw_message += ' ';
 	}
@@ -379,33 +417,17 @@ string message::to_irc_message() const {
 	return raw_message;
 }
 
-message& message::capability_request_end_message() {
-	static message message({}, nullopt, "CAP", {"END"});
-	return message;
-}
-
-bool irc::message::operator==(const message& other) const {
-	return m_command == other.m_command && m_prefix == other.m_prefix && m_params == other.m_params &&
-		   m_tags == other.m_tags;
-}
-
-bool irc::message::operator!=(const message& other) const {
-	return !operator==(other);
+message message::capability_request_end_message() {
+	return message("CAP", {string("END")});
 }
 
 string prefix_t::to_irc_prefix() const {
 	string prefix = m_main;
-	if (m_user.has_value())
+	if (m_user.has_value()) {
 		prefix += "!" + m_user.value();
-	if (m_host.has_value())
+	}
+	if (m_host.has_value()) {
 		prefix += "@" + m_host.value();
+	}
 	return prefix;
-}
-
-bool irc::prefix_t::operator==(const prefix_t& other) const {
-	return m_main == other.m_main && m_user == other.m_user && m_host == other.m_host;
-}
-
-bool irc::prefix_t::operator!=(const prefix_t& other) const {
-	return !operator==(other);
 }
