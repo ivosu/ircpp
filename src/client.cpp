@@ -63,7 +63,7 @@ task<void> client::create_infinite_receive_task(const cancellation_token& cancel
 	);
 }
 
-client::client(const utility::string_t& host, bool handle_ping) : m_handle_ping(handle_ping) {
+client::client(const string& host, bool handle_ping) : m_handle_ping(handle_ping) {
 	if (m_client.connect(host).wait() != task_status::completed) {
 		throw "Not connected";
 	}

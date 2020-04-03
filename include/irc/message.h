@@ -1,12 +1,11 @@
-#ifndef TWITCH_IRC_MESSAGE_H
-#define TWITCH_IRC_MESSAGE_H
+#ifndef IRC_MESSAGE_H
+#define IRC_MESSAGE_H
 
 
 #include <string>
 #include <map>
 #include <vector>
 #include <optional>
-#include <memory>
 
 namespace irc {
 
@@ -125,4 +124,4 @@ namespace irc {
 }
 
 
-#endif //TWITCH_IRC_MESSAGE_H
+#endif //IRC_MESSAGE_H

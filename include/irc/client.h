@@ -1,17 +1,16 @@
-#ifndef TWITCH_IRC_IRCCLIENT_H
-#define TWITCH_IRC_IRCCLIENT_H
+#ifndef IRC_IRCCLIENT_H
+#define IRC_IRCCLIENT_H
 
 #include <string>
 #include <pplx/pplxtasks.h>
 #include <cpprest/ws_client.h>
-#include <thread>
 #include "message.h"
 #include "util/ts_queue.hpp"
 
 namespace irc {
 	class client {
 	  public:
-		client(const utility::string_t& host, bool handle_ping);
+		client(const std::string& host, bool handle_ping);
 
 		~client();
 
@@ -38,4 +37,4 @@ namespace irc {
 }
 
 
-#endif //TWITCH_IRC_IRCCLIENT_H
+#endif //IRC_IRCCLIENT_H

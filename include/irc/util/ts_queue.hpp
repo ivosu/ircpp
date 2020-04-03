@@ -1,5 +1,5 @@
-#ifndef TWITCH_IRC_TS_QUEUE_HPP
-#define TWITCH_IRC_TS_QUEUE_HPP
+#ifndef IRC_TS_QUEUE_HPP
+#define IRC_TS_QUEUE_HPP
 
 #include <queue>
 #include <mutex>
@@ -65,4 +65,4 @@ class ts_queue {
 	std::condition_variable m_cond_var;
 };
 
-#endif //TWITCH_IRC_TS_QUEUE_HPP
+#endif //IRC_TS_QUEUE_HPP

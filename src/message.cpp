@@ -1,6 +1,7 @@
 #include "irc/message.h"
 #include <algorithm>
 #include <assert.h>
+#include <memory>
 
 using std::string;
 using std::vector;
@@ -9,9 +10,6 @@ using std::nullopt;
 using std::make_optional;
 using std::pair;
 using std::make_pair;
-using std::replace;
-using std::shared_ptr;
-using std::make_shared;
 
 using irc::message;
 using params_t = irc::message::params_t;
@@ -21,9 +19,9 @@ using irc::prefix_t;
 #define SKIP_WHITESPACES(it, end) do {} while ((++it) != (end) && *(it) == ' ')
 
 #define SKIP_WHITESPACES_THROW_END(it, end, parsed_part) SKIP_WHITESPACES((it), (end));       \
-    if ((it) == (end)) {                                                                      \
-        throw message::parsing_error("Message ended while parsing " + string((parsed_part))); \
-    }
+	if ((it) == (end)) {                                                                      \
+		throw message::parsing_error("Message ended while parsing " + string((parsed_part))); \
+	}
 
 namespace irc_parsing {
 	static string parse_key(string::const_iterator& it, const string::const_iterator& end) {
