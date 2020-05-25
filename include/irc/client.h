@@ -1,5 +1,5 @@
-#ifndef IRC_IRCCLIENT_H
-#define IRC_IRCCLIENT_H
+#ifndef IRC_CLIENT_H
+#define IRC_CLIENT_H
 
 #include <string>
 #include <pplx/pplxtasks.h>
@@ -37,4 +37,4 @@ namespace irc {
 }
 
 
-#endif //IRC_IRCCLIENT_H
+#endif //IRC_CLIENT_H

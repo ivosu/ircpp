@@ -1,5 +1,5 @@
-#ifndef IRC_TS_QUEUE_HPP
-#define IRC_TS_QUEUE_HPP
+#ifndef TS_QUEUE_HPP
+#define TS_QUEUE_HPP
 
 #include <queue>
 #include <mutex>
@@ -39,8 +39,8 @@ class ts_queue {
 		m_cond_var.notify_one();
 	}
 
-	template<typename _Rep, typename _Period>
-	std::optional<T> pop(const std::chrono::duration<_Rep, _Period>& timeout) {
+	template<typename Rep, typename Period>
+	std::optional<T> pop(const std::chrono::duration<Rep, Period>& timeout) {
 		std::unique_lock lock(m_mutex);
 		if (!m_cond_var.wait_for(lock, timeout, [=]() -> bool { return !m_queue.empty(); }))
 			return std::nullopt;
@@ -65,4 +65,4 @@ class ts_queue {
 	std::condition_variable m_cond_var;
 };
 
-#endif //IRC_TS_QUEUE_HPP
+#endif //TS_QUEUE_HPP
