@@ -92,7 +92,9 @@ namespace irc {
 				   && m_params == other.m_params;
 		}
 
-		bool operator!=(const message& other) const;
+		bool operator!=(const message& other) const {
+			return !operator==(other);
+		}
 
 		class parsing_error : public std::exception {
 		  public:
